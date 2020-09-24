@@ -127,9 +127,7 @@ const RoomPage: React.FC = () => {
 
     // VIEWER: quando alguem comeca uma stream
     // informa os viewers para atualizar a UI
-    socket.current.on('new_streamer', (socketId: string) => {
-      console.log(`socketId: ${socketId}`);
-      console.log(`streamer: ${streamerName}`);
+    socket.current.on('streamer_joined', (socketId: string) => {
       setStreamerName(socketId);
     });
 
