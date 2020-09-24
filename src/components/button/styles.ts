@@ -13,7 +13,7 @@ export const Container = styled.button`
   border: 0;
   border-radius: 0.2rem;
 
-  transition: all 0.25s ease-in-out;
+  transition: all 0.2s ease-in-out;
 
   cursor: pointer;
   &:hover {

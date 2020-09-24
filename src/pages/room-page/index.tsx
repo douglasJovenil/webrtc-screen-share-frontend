@@ -200,6 +200,7 @@ const RoomPage: React.FC = () => {
         stream.current.removeTrack(track);
         track.stop();
       });
+      videoRef.current.srcObject = null;
     }
   }
 
