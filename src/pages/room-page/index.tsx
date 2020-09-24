@@ -24,14 +24,15 @@ interface AnswerPayload {
 }
 
 const RoomPage: React.FC = () => {
-  const [peers, setPeers] = useState<Map<string, Peer.Instance>>(
-    new Map<string, Peer.Instance>()
-  );
   const [viewersName, setViewersName] = useState<string[]>([]);
-  const [streamerName, setStreamerName] = useState<string>(null);
+  const [streamerName, setStreamerName] = useState<string>('');
   const [myName, setMyName] = useState<string>('');
+
   const socket = useRef<SocketIOClient.Socket>();
   const stream = useRef<MediaStream>();
+  const peers = useRef<Map<string, Peer.Instance>>(
+    new Map<string, Peer.Instance>()
+  );
 
   const history = useHistory();
 
@@ -47,21 +48,19 @@ const RoomPage: React.FC = () => {
     // Deve ser criado um peer para cada viwer
     socket.current.on(
       'create_peers_to_start_stream',
-      (receivedSocketsIds: string[]) => {
+      async (receivedSocketsIds: string[]) => {
         try {
           // Aquisicao da captura de tela
           const mediaDevices = navigator.mediaDevices as any;
-          stream.current = mediaDevices.getDisplayMedia();
+          stream.current = await mediaDevices.getDisplayMedia();
         } catch {
-          socket.current.disconnect();
           stopStream();
-          history.push('/error');
           return;
         }
 
         // Callback para quando o streamer para de compartilhar a tela
         stream.current.getVideoTracks().forEach((track) => {
-          track.onended = () => stopStream();
+          track.onended = stopStream;
         });
 
         // Mostra na tela do streamer sua propria captura de tela
@@ -69,7 +68,7 @@ const RoomPage: React.FC = () => {
 
         // Para cada viwer conectado na sala um peer eh criado e salvo em peers
         receivedSocketsIds.forEach((socketId) => {
-          savePeer(socketId, createOfferPeer(socketId));
+          peers.current.set(socketId, createOfferPeer(socketId));
         });
       }
     );
@@ -77,20 +76,19 @@ const RoomPage: React.FC = () => {
     // STREAMER: solicitacao para adicionar um novo viewer
     // quando a streamer ja estiver acontecendo
     socket.current.on('add_new_peer', (socketId: string) => {
-      savePeer(socketId, createOfferPeer(socketId));
+      peers.current.set(socketId, createOfferPeer(socketId));
     });
 
     // STREAMER: quando o streamer recebe a resposta dos viewers
     socket.current.on('accept_answer', (answer: AnswerPayload) => {
       // Procura pelo peer do viewer especifico para finalizar o handshake
-      peers.get(answer.socketId).signal(answer.signal);
+      peers.current.get(answer.socketId).signal(answer.signal);
     });
 
     // STREAMER: quando algum viewer sai da sala
     socket.current.on('delete_peer', (socketId: string) => {
       // Deleta o peer do viewer que saiu
-      peers.delete(socketId);
-      setPeers(new Map(peers));
+      peers.current.delete(socketId);
     });
 
     // VIEWER: quando o streamer solicita que o viewer crie um peer
@@ -114,9 +112,9 @@ const RoomPage: React.FC = () => {
     // VIEWER: quando alguem sai da sala
     // todos recebem os ID de quem saiu para atualizar a UI
     socket.current.on('viewer_quit', (socketId: string) => {
-      setViewersName((previousViewers) => {
-        previousViewers.filter((id) => id !== socketId);
-      });
+      setViewersName((previousViewers) =>
+        previousViewers.filter((id) => id !== socketId)
+      );
     });
 
     // VIEWER | STREAMER: quando o viewer consegue entrar na sala
@@ -154,7 +152,7 @@ const RoomPage: React.FC = () => {
       socket.current.emit('send_offer', { signal, socketId });
     });
 
-    peer.on('error', (_) => console.log(`viewer ${socketId} desconectou`));
+    peer.on('error', () => console.log(`viewer ${socketId} desconectou`));
 
     return peer;
   }
@@ -178,18 +176,12 @@ const RoomPage: React.FC = () => {
     });
 
     // Quando o streamer parar a transmissao
-    peer.on('error', (_) => {
+    peer.on('error', () => {
       console.log('streamer parou a transmissao');
     });
 
     // Gera a resposta
     peer.signal(offer);
-  }
-
-  function savePeer(socketId: string, peer: Peer.Instance) {
-    // salva o peer na lista de peers
-    peers.set(socketId, peer);
-    setPeers(new Map(peers));
   }
 
   function startStream() {
@@ -199,16 +191,13 @@ const RoomPage: React.FC = () => {
 
   function stopStream() {
     // Limpa os peers
-    peers.forEach((peer) => peer.destroy());
-    peers.clear();
-    setPeers(new Map(peers));
+    peers.current.forEach((peer) => peer.destroy());
+    peers.current.clear();
 
-    // Caso o usuario tenha concedido acesso a tela, limpa as tracks
-    if (stream.current) {
-      stream.current.getVideoTracks().forEach((track) => {
-        track.stop();
-      });
-    }
+    stream.current.getVideoTracks().forEach((track) => {
+      stream.current.removeTrack(track);
+      track.stop();
+    });
 
     // Informa o servidor que o streamer parou de compartilhar a tela
     socket.current.emit('stop_stream');
@@ -225,7 +214,7 @@ const RoomPage: React.FC = () => {
   }
 
   function iAmTheStreamer(): boolean {
-    return streamerName === myName;
+    return myName !== '' && myName !== '' && streamerName === myName;
   }
 
   return (
