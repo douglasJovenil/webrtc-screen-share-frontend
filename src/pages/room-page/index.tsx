@@ -230,7 +230,7 @@ const RoomPage: React.FC = () => {
 
   // ALL: Retorna se o socket esta conectado
   function isSocketConnected(): boolean {
-    return getSocketID().length > 1 ? false : true;
+    return getSocketID().length > 1 ? true : false;
   }
 
   // ALL: Retorna se o socket esta desconectado
