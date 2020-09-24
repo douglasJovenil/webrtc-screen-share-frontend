@@ -29,7 +29,6 @@ const RoomPage: React.FC = () => {
   );
   const [viewersName, setViewersName] = useState<string[]>([]);
   const [myName, setMyName] = useState<string>('');
-  const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [iAmTheStreamer, setIAmTheStreamer] = useState<boolean>(false);
   const socket = useRef<SocketIOClient.Socket>();
   const stream = useRef<MediaStream>();
@@ -53,27 +52,29 @@ const RoomPage: React.FC = () => {
     socket.current.on(
       'create_peers_to_start_stream',
       async (receivedSocketsIds: string[]) => {
-        // Aquisicao da captura de tela
-        const mediaDevices = navigator.mediaDevices as any;
         try {
+          // Aquisicao da captura de tela
+          const mediaDevices = navigator.mediaDevices as any;
           stream.current = await mediaDevices.getDisplayMedia();
-          // Callback para quando o streamer para de compartilhar a tela
-          stream.current.getVideoTracks().forEach((track) => {
-            track.onended = stopStream;
-          });
-
-          // Mostra na tela do streamer sua propria captura de tela
-          setMainVideo(stream.current);
-
-          // Para cada viwer conectado na sala um peer eh criado e salvo em peers
-          receivedSocketsIds.forEach((socketId) => {
-            savePeer(socketId, createOfferPeer(socketId, stream.current));
-          });
         } catch {
           socket.current.disconnect();
           stopStream();
           history.push('/error');
+          return;
         }
+
+        // Callback para quando o streamer para de compartilhar a tela
+        stream.current.getVideoTracks().forEach((track) => {
+          track.onended = stopStream;
+        });
+
+        // Mostra na tela do streamer sua propria captura de tela
+        setMainVideo(stream.current);
+
+        // Para cada viwer conectado na sala um peer eh criado e salvo em peers
+        receivedSocketsIds.forEach((socketId) => {
+          savePeer(socketId, createOfferPeer(socketId, stream.current));
+        });
       }
     );
 
@@ -127,6 +128,8 @@ const RoomPage: React.FC = () => {
     // VIEWER: quando alguem comeca uma stream
     // informa os viewers para atualizar a UI
     socket.current.on('new_streamer', (socketId: string) => {
+      console.log(`socketId: ${socketId}`);
+      console.log(`streamer: ${streamerName}`);
       setStreamerName(socketId);
     });
 
@@ -183,17 +186,12 @@ const RoomPage: React.FC = () => {
 
     // Quando receber uma stream, mostra na tela o que esta recebendo
     peer.on('stream', (stream: MediaStream) => {
-      setIsStreaming(true);
       setMainVideo(stream);
     });
 
     // Quando o streamer parar a transmissao
     peer.on('error', (_) => {
       console.log('streamer parou a transmissao');
-    });
-
-    peer.on('close', () => {
-      setIsStreaming(false);
     });
 
     // Gera a resposta
@@ -208,7 +206,6 @@ const RoomPage: React.FC = () => {
 
   function startStream() {
     // Indica que o usuario em questao gostaria de compartilhar sua tela
-    setIsStreaming(true);
     setIAmTheStreamer(true);
     socket.current.emit('start_stream');
   }
@@ -218,7 +215,6 @@ const RoomPage: React.FC = () => {
     peers.forEach((peer) => peer.destroy());
     peers.clear();
     setPeers(new Map(peers));
-    setIsStreaming(false);
     setIAmTheStreamer(false);
     // Informa o servidor que o streamer parou de compartilhar a tela
     socket.current.emit('stop_stream');
@@ -237,25 +233,37 @@ const RoomPage: React.FC = () => {
     mainVideo.srcObject = stream;
   }
 
+  function roomHasStreamer(): boolean {
+    return (streamerName === null || streamerName === '') ? false : true;
+  }
+
   return (
     <Container>
       <MainContent>
-        {isStreaming ? (
+        {roomHasStreamer() && (
           <VideoContainer>
             <Screen id="main-video" autoPlay muted />
           </VideoContainer>
-        ) : (
+        )}
+
+        {!roomHasStreamer() && (
           <SpinnerContainer>
             <Loader type="Circles" color="#212121" height={100} width={100} />
           </SpinnerContainer>
         )}
+
         <Row>
-          {iAmTheStreamer ? (
-            <Button onClick={() => stopSharingScreen(stream.current)} disabled={!isStreaming}>
+          {iAmTheStreamer && (
+            <Button
+              onClick={() => stopSharingScreen(stream.current)}
+              disabled={!roomHasStreamer()}
+            >
               Parar de Compartilhar
             </Button>
-          ) : (
-            <Button onClick={() => startStream()} disabled={isStreaming}>
+          )}
+
+          {!iAmTheStreamer && (
+            <Button onClick={() => startStream()} disabled={roomHasStreamer()}>
               Compartilhar tela
             </Button>
           )}
