@@ -16,7 +16,7 @@ import ViewerCard from 'src/components/viewer-card';
 import Screen from 'src/components/screen';
 import Button from 'src/components/button';
 import Loader from 'react-loader-spinner';
-import ErrorIcon from 'src/assets/error-icon';
+import { useHistory } from 'react-router-dom';
 
 interface AnswerPayload {
   signal: SignalData;
@@ -39,8 +39,14 @@ const RoomPage: React.FC = () => {
   const [removeViewerName, setRemoveViewerName] = useState<string>('');
   const [streamerName, setStreamerName] = useState<string>(null);
 
+  const history = useHistory();
+
   useEffect(() => {
-    socket.current = io.connect(process.env.NODE_ENV === 'production' ? 'feracode-backend.herokuapp.com' : 'localhost:8080');
+    socket.current = io.connect(
+      process.env.NODE_ENV === 'production'
+        ? 'feracode-backend.herokuapp.com'
+        : 'localhost:8080'
+    );
     // Cliente solicita ao servidor pedindo para entrar na sala
     socket.current.emit('join_room');
     // STREAMER: quando o streamer vai iniciar a stream
@@ -52,24 +58,23 @@ const RoomPage: React.FC = () => {
         const mediaDevices = navigator.mediaDevices as any;
         try {
           stream.current = await mediaDevices.getDisplayMedia();
+          // Callback para quando o streamer para de compartilhar a tela
+          stream.current.getVideoTracks().forEach((track) => {
+            track.onended = stopStream;
+          });
+
+          // Mostra na tela do streamer sua propria captura de tela
+          setMainVideo(stream.current);
+
+          // Para cada viwer conectado na sala um peer eh criado e salvo em peers
+          receivedSocketsIds.forEach((socketId) => {
+            savePeer(socketId, createOfferPeer(socketId));
+          });
         } catch {
+          socket.current.disconnect();
           stopStream();
-          setErrorOccurred(true);
-          return;
+          history.push('/error');
         }
-
-        // Callback para quando o streamer para de compartilhar a tela
-        stream.current.getVideoTracks().forEach((track) => {
-          track.onended = stopStream;
-        });
-
-        // Mostra na tela do streamer sua propria captura de tela
-        setMainVideo(stream.current);
-
-        // Para cada viwer conectado na sala um peer eh criado e salvo em peers
-        receivedSocketsIds.forEach((socketId) => {
-          savePeer(socketId, createOfferPeer(socketId));
-        });
       }
     );
 
@@ -128,7 +133,8 @@ const RoomPage: React.FC = () => {
 
     // VIEWER: quando a sala estiver cheia
     socket.current.on('full_room', () => {
-      setErrorOccurred(true);
+      // setErrorOccurred(true);
+      window.location.href = '/error';
     });
   }, []);
 
@@ -235,56 +241,42 @@ const RoomPage: React.FC = () => {
 
   return (
     <Container>
-      {errorOccurred ? (
-        <ErrorIcon />
-      ) : (
-        <>
-          <MainContent>
-            {isStreaming ? (
-              <VideoContainer>
-                <Screen id="main-video" autoPlay muted />
-              </VideoContainer>
-            ) : (
-              <SpinnerContainer>
-                <Loader
-                  type="Circles"
-                  color="#212121"
-                  height={100}
-                  width={100}
-                />
-              </SpinnerContainer>
-            )}
-            <Row>
-              {iAmTheStreamer ? (
-                <Button
-                  onClick={() => stopSharingScreen()}
-                  disabled={!isStreaming}
-                >
-                  Parar de Compartilhar
-                </Button>
-              ) : (
-                <Button onClick={() => startStream()} disabled={isStreaming}>
-                  Compartilhar tela
-                </Button>
-              )}
-            </Row>
-          </MainContent>
+      <MainContent>
+        {isStreaming ? (
+          <VideoContainer>
+            <Screen id="main-video" autoPlay muted />
+          </VideoContainer>
+        ) : (
+          <SpinnerContainer>
+            <Loader type="Circles" color="#212121" height={100} width={100} />
+          </SpinnerContainer>
+        )}
+        <Row>
+          {iAmTheStreamer ? (
+            <Button onClick={() => stopSharingScreen()} disabled={!isStreaming}>
+              Parar de Compartilhar
+            </Button>
+          ) : (
+            <Button onClick={() => startStream()} disabled={isStreaming}>
+              Compartilhar tela
+            </Button>
+          )}
+        </Row>
+      </MainContent>
 
-          <LateralContent>
-            <ViewerCard
-              label={myName}
-              colorIcon={streamerName === myName ? '#FF1744' : '#2979FF'}
-            />
-            {viewersName.map((name) => (
-              <ViewerCard
-                key={name}
-                label={name}
-                colorIcon={streamerName === name ? '#FF1744' : '#424242'}
-              />
-            ))}
-          </LateralContent>
-        </>
-      )}
+      <LateralContent>
+        <ViewerCard
+          label={myName}
+          colorIcon={streamerName === myName ? '#FF1744' : '#2979FF'}
+        />
+        {viewersName.map((name) => (
+          <ViewerCard
+            key={name}
+            label={name}
+            colorIcon={streamerName === name ? '#FF1744' : '#424242'}
+          />
+        ))}
+      </LateralContent>
     </Container>
   );
 };
