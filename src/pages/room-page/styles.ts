@@ -47,6 +47,7 @@ export const LateralContent = styled.div`
   display: flex;
   flex-direction: column;
 
+  /* width: 21rem; */
   width: 25%;
   height: 100%;
 

@@ -228,6 +228,15 @@ const RoomPage: React.FC = () => {
     return '';
   }
 
+  // ALL: Retorna o estado do socket
+  function isSocketDisconnected(): boolean {
+    if (socket.current) {
+      console.log(socket.current);
+      return socket.current.id === '' ? true : false;
+    }
+    return true;
+  }
+
   return (
     <Container>
       <MainContent>
@@ -239,45 +248,40 @@ const RoomPage: React.FC = () => {
           </SpinnerContainer>
         )}
 
-        {getSocketID() && (
-          <ButtonsContainer>
-            {iAmTheStreamer() && (
-              <Button
-                onClick={() => stopStream()}
-                disabled={!roomHasStreamer()}
-              >
-                Parar de Compartilhar
-              </Button>
-            )}
+        <ButtonsContainer>
+          {iAmTheStreamer() && (
+            <Button onClick={() => stopStream()} disabled={!roomHasStreamer()}>
+              Parar de Compartilhar
+            </Button>
+          )}
 
-            {!iAmTheStreamer() && (
-              <Button
-                onClick={() => startStream()}
-                disabled={roomHasStreamer()}
-              >
-                Compartilhar tela
-              </Button>
-            )}
-          </ButtonsContainer>
-        )}
+          {!iAmTheStreamer() && (
+            <Button
+              onClick={() => startStream()}
+              disabled={roomHasStreamer() || isSocketDisconnected()}
+            >
+              Compartilhar tela
+            </Button>
+          )}
+        </ButtonsContainer>
       </MainContent>
 
-      {getSocketID() && (
-        <LateralContent>
+      <LateralContent>
+        {getSocketID() && (
           <ViewerCard
             label={getSocketID()}
             colorIcon={iAmTheStreamer() ? '#FF1744' : '#2979FF'}
           />
+        )}
 
-          {viewersSocketsIDs.map((name) => (
-            <ViewerCard
-              key={name}
-              label={name}
-              colorIcon={streamerSocketID === name ? '#FF1744' : '#424242'}
-            />
-          ))}
-        </LateralContent>
-      )}
+        {viewersSocketsIDs.map((name) => (
+          <ViewerCard
+            key={name}
+            label={name}
+            colorIcon={streamerSocketID === name ? '#FF1744' : '#424242'}
+          />
+        ))}
+      </LateralContent>
     </Container>
   );
 };
