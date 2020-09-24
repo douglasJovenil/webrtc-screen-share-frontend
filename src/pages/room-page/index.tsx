@@ -57,14 +57,14 @@ const RoomPage: React.FC = () => {
           stream.current = await mediaDevices.getDisplayMedia();
         } catch {
           socket.current.disconnect();
-          stopStream();
+          stopStream(stream.current);
           history.push('/error');
           return;
         }
 
         // Callback para quando o streamer para de compartilhar a tela
         stream.current.getVideoTracks().forEach((track) => {
-          track.onended = stopStream;
+          track.onended = () => stopStream(stream.current);
         });
 
         // Mostra na tela do streamer sua propria captura de tela
@@ -206,20 +206,21 @@ const RoomPage: React.FC = () => {
     socket.current.emit('start_stream');
   }
 
-  function stopStream() {
+  function stopStream(stream: MediaStream) {
     // Limpa os peers
     peers.forEach((peer) => peer.destroy());
     peers.clear();
     setPeers(new Map(peers));
+
+    // Caso o usuario tenha concedido acesso a tela, limpa as tracks
+    if (stream) {
+      stream.getVideoTracks().forEach((track) => {
+        track.stop();
+      });
+    }
+
     // Informa o servidor que o streamer parou de compartilhar a tela
     socket.current.emit('stop_stream');
-  }
-
-  function stopSharingScreen(stream: MediaStream) {
-    stopStream();
-    stream.getVideoTracks().forEach((track) => {
-      track.stop();
-    });
   }
 
   function setMainVideo(stream: MediaStream) {
@@ -229,11 +230,11 @@ const RoomPage: React.FC = () => {
   }
 
   function roomHasStreamer(): boolean {
-    return (streamerName === null || streamerName === '') ? false : true;
+    return streamerName === null || streamerName === '' ? false : true;
   }
 
   function iAmTheStreamer(): boolean {
-    return (streamerName === myName);
+    return streamerName === myName;
   }
 
   return (
@@ -254,7 +255,7 @@ const RoomPage: React.FC = () => {
         <Row>
           {iAmTheStreamer() && (
             <Button
-              onClick={() => stopSharingScreen(stream.current)}
+              onClick={() => stopStream(stream.current)}
               disabled={!roomHasStreamer()}
             >
               Parar de Compartilhar
