@@ -228,19 +228,22 @@ const RoomPage: React.FC = () => {
     return '';
   }
 
-  // ALL: Retorna o estado do socket
+  // ALL: Retorna se o socket esta conectado
+  function isSocketConnected(): boolean {
+    return getSocketID() === '' ? false : true;
+  }
+
+  // ALL: Retorna se o socket esta desconectado
   function isSocketDisconnected(): boolean {
-    if (socket.current) {
-      console.log(socket.current);
-      return socket.current.id === '' ? true : false;
-    }
-    return true;
+    return !isSocketConnected();
   }
 
   return (
     <Container>
       <MainContent>
-        {roomHasStreamer() && <VideoContainer>{video}</VideoContainer>}
+        <VideoContainer className={!roomHasStreamer() ? 'hide' : ''}>
+          {video}
+        </VideoContainer>
 
         {!roomHasStreamer() && (
           <SpinnerContainer>
@@ -267,7 +270,7 @@ const RoomPage: React.FC = () => {
       </MainContent>
 
       <LateralContent>
-        {getSocketID() && (
+        {isSocketConnected() && (
           <ViewerCard
             label={getSocketID()}
             colorIcon={iAmTheStreamer() ? '#FF1744' : '#2979FF'}

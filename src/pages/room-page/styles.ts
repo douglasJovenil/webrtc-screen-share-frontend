@@ -7,6 +7,10 @@ export const Container = styled.div`
 
   height: 100vh;
   width: 100vw;
+
+  .hide {
+    display: none;
+  }
 `;
 
 export const MainContent = styled.div`
