@@ -220,9 +220,9 @@ const RoomPage: React.FC = () => {
   }
 
   function stopSharingScreen(stream: MediaStream) {
+    stopStream();
     stream.getVideoTracks().forEach((track) => {
       track.stop();
-      stopStream();
     });
   }
 
