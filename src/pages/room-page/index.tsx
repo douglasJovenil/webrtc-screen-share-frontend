@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-import useBeforeUnload from 'use-before-unload';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useBeforeUnload } from 'react-use';
 import Peer, { SignalData } from 'simple-peer';
 import { useHistory } from 'react-router-dom';
 import io from 'socket.io-client';
@@ -26,7 +26,6 @@ interface AnswerPayload {
 const RoomPage: React.FC = () => {
   const [viewersSocketsIDs, setViewersSocketsIDs] = useState<string[]>([]);
   const [streamerSocketID, setStreamerSocketID] = useState<string>('');
-  const [unloadPage, setUnloadPage] = useState<boolean>(false);
 
   const socket = useRef<SocketIOClient.Socket>();
   const stream = useRef<MediaStream>();
@@ -124,16 +123,12 @@ const RoomPage: React.FC = () => {
     });
   }, []);
 
-  // ALL: Dispara o handler para quando a aba do navegador eh fechada
-  useBeforeUnload(() => {
-    setUnloadPage(true);
-  });
-
   // ALL: Handler para fechar a aba -> Caso o streamer feche a aba, os viewers devem ser informados
-  useEffect(() => {
-    if (unloadPage && iAmTheStreamer()) socket.current.emit('stop_stream');
-    if (unloadPage) socket.current.disconnect();
-  }, [unloadPage]);
+  useBeforeUnload(() => {
+    if (iAmTheStreamer()) socket.current.emit('stop_stream');
+    socket.current.disconnect();
+    return true;
+  });
 
   // STREAMER: cria um peer usando a captura de tela do streamer
   function createOfferPeer(socketID: string) {
@@ -263,10 +258,12 @@ const RoomPage: React.FC = () => {
       </MainContent>
 
       <LateralContent>
-        <ViewerCard
-          label={getSocketID()}
-          colorIcon={iAmTheStreamer() ? '#FF1744' : '#2979FF'}
-        />
+        {getSocketID() && (
+          <ViewerCard
+            label={getSocketID()}
+            colorIcon={iAmTheStreamer() ? '#FF1744' : '#2979FF'}
+          />
+        )}
         {viewersSocketsIDs.map((name) => (
           <ViewerCard
             key={name}
