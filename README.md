@@ -5,3 +5,5 @@ heroku config:set SERVER_URL="SJDIOASJDIOASJDOI ASDASDSA"
 heroku run bash --app APP_NAME
 
 yarn add webpack webpack-cli
+
+remover join_accept no server-side

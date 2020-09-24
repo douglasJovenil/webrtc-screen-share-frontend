@@ -26,7 +26,6 @@ interface AnswerPayload {
 const RoomPage: React.FC = () => {
   const [viewersName, setViewersName] = useState<string[]>([]);
   const [streamerName, setStreamerName] = useState<string>('');
-  const [myName, setMyName] = useState<string>('');
 
   const socket = useRef<SocketIOClient.Socket>();
   const stream = useRef<MediaStream>();
@@ -116,10 +115,6 @@ const RoomPage: React.FC = () => {
         previousViewers.filter((id) => id !== socketId)
       );
     });
-
-    // VIEWER | STREAMER: quando o viewer consegue entrar na sala
-    // recebe seu ID para mostrar na UI
-    socket.current.on('join_accept', (socketId: string) => setMyName(socketId));
 
     // VIEWER: quando alguem comeca uma stream
     // informa os viewers para atualizar a UI
@@ -222,7 +217,15 @@ const RoomPage: React.FC = () => {
   }
 
   function iAmTheStreamer(): boolean {
-    return myName !== '' && myName !== '' && streamerName === myName;
+    const socketId = getSocketId();
+    return socketId !== '' && streamerName === myId;
+  }
+
+  function getSocketId(): string {
+    if (socket.current) {
+      return socket.current.id;
+    }
+    return '';
   }
 
   return (
@@ -257,7 +260,7 @@ const RoomPage: React.FC = () => {
 
       <LateralContent>
         <ViewerCard
-          label={myName}
+          label={getSocketId()}
           colorIcon={iAmTheStreamer() ? '#FF1744' : '#2979FF'}
         />
         {viewersName.map((name) => (
