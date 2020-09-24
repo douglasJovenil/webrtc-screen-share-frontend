@@ -43,25 +43,6 @@ export const SpinnerContainer = styled.div`
   height: 100%;
 `;
 
-export const ButtonsContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  width: 100%;
-  padding: calc(100vh - 90%) 0;
-
-`;
-
-export const Row = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
-  align-items: center;
-  width: 100%;
-`;
-
 export const LateralContent = styled.div`
   display: flex;
   flex-direction: column;
@@ -72,6 +53,11 @@ export const LateralContent = styled.div`
   box-shadow: 0px 0px 6px 1px rgba(42, 42, 42, 0.2);
 `;
 
-export const Spacer = styled.div`
-  margin-top: 1rem;
+export const ButtonsContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  width: 100%;
 `;
+

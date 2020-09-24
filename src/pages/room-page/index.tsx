@@ -10,8 +10,7 @@ import {
   LateralContent,
   VideoContainer,
   SpinnerContainer,
-  Row,
-  ButtonsContainer,
+  ButtonsContainer
 } from './styles';
 
 import ViewerCard from 'src/components/viewer-card';
@@ -244,8 +243,7 @@ const RoomPage: React.FC = () => {
           </SpinnerContainer>
         )}
 
-        <ButtonsContainer>
-          <Row>
+          <ButtonsContainer>
             {iAmTheStreamer() && (
               <Button
                 onClick={() => stopStream()}
@@ -263,8 +261,7 @@ const RoomPage: React.FC = () => {
                 Compartilhar tela
               </Button>
             )}
-          </Row>
-        </ButtonsContainer>
+          </ButtonsContainer>
       </MainContent>
 
       <LateralContent>
