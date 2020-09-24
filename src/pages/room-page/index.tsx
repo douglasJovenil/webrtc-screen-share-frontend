@@ -57,14 +57,14 @@ const RoomPage: React.FC = () => {
           stream.current = await mediaDevices.getDisplayMedia();
         } catch {
           socket.current.disconnect();
-          stopStream(stream.current);
+          stopStream();
           history.push('/error');
           return;
         }
 
         // Callback para quando o streamer para de compartilhar a tela
         stream.current.getVideoTracks().forEach((track) => {
-          track.onended = () => stopStream(stream.current);
+          track.onended = () => stopStream();
         });
 
         // Mostra na tela do streamer sua propria captura de tela
@@ -72,7 +72,7 @@ const RoomPage: React.FC = () => {
 
         // Para cada viwer conectado na sala um peer eh criado e salvo em peers
         receivedSocketsIds.forEach((socketId) => {
-          savePeer(socketId, createOfferPeer(socketId, stream.current));
+          savePeer(socketId, createOfferPeer(socketId));
         });
       }
     );
@@ -80,7 +80,7 @@ const RoomPage: React.FC = () => {
     // STREAMER: solicitacao para adicionar um novo viewer
     // quando a streamer ja estiver acontecendo
     socket.current.on('add_new_peer', (socketId: string) => {
-      savePeer(socketId, createOfferPeer(socketId, stream.current));
+      savePeer(socketId, createOfferPeer(socketId));
     });
 
     // STREAMER: quando o streamer recebe a resposta dos viewers
@@ -150,12 +150,12 @@ const RoomPage: React.FC = () => {
     socket.current.disconnect();
   });
 
-  function createOfferPeer(socketId: string, stream: MediaStream) {
+  function createOfferPeer(socketId: string) {
     // cria um peer usando a captura de tela do streamer
     const peer = new Peer({
       initiator: true,
       trickle: false,
-      stream: stream,
+      stream: stream.current,
     });
 
     // callback para enviar a offer para o servidor
@@ -206,15 +206,15 @@ const RoomPage: React.FC = () => {
     socket.current.emit('start_stream');
   }
 
-  function stopStream(stream: MediaStream) {
+  function stopStream() {
     // Limpa os peers
     peers.forEach((peer) => peer.destroy());
     peers.clear();
     setPeers(new Map(peers));
 
     // Caso o usuario tenha concedido acesso a tela, limpa as tracks
-    if (stream) {
-      stream.getVideoTracks().forEach((track) => {
+    if (stream.current) {
+      stream.current.getVideoTracks().forEach((track) => {
         track.stop();
       });
     }
@@ -255,7 +255,7 @@ const RoomPage: React.FC = () => {
         <Row>
           {iAmTheStreamer() && (
             <Button
-              onClick={() => stopStream(stream.current)}
+              onClick={() => stopStream()}
               disabled={!roomHasStreamer()}
             >
               Parar de Compartilhar
