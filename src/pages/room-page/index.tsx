@@ -10,7 +10,7 @@ import {
   LateralContent,
   VideoContainer,
   SpinnerContainer,
-  ButtonsContainer
+  ButtonsContainer,
 } from './styles';
 
 import ViewerCard from 'src/components/viewer-card';
@@ -231,18 +231,15 @@ const RoomPage: React.FC = () => {
   return (
     <Container>
       <MainContent>
-        {roomHasStreamer() && (
-          <VideoContainer>
-            {video}
-          </VideoContainer>
-        )}
-        
+        {roomHasStreamer() && <VideoContainer>{video}</VideoContainer>}
+
         {!roomHasStreamer() && (
           <SpinnerContainer>
             <Loader type="Circles" color="#212121" />
           </SpinnerContainer>
         )}
 
+        {getSocketID() && (
           <ButtonsContainer>
             {iAmTheStreamer() && (
               <Button
@@ -262,23 +259,25 @@ const RoomPage: React.FC = () => {
               </Button>
             )}
           </ButtonsContainer>
+        )}
       </MainContent>
 
-      <LateralContent>
-        {getSocketID() && (
+      {getSocketID() && (
+        <LateralContent>
           <ViewerCard
             label={getSocketID()}
             colorIcon={iAmTheStreamer() ? '#FF1744' : '#2979FF'}
           />
-        )}
-        {viewersSocketsIDs.map((name) => (
-          <ViewerCard
-            key={name}
-            label={name}
-            colorIcon={streamerSocketID === name ? '#FF1744' : '#424242'}
-          />
-        ))}
-      </LateralContent>
+
+          {viewersSocketsIDs.map((name) => (
+            <ViewerCard
+              key={name}
+              label={name}
+              colorIcon={streamerSocketID === name ? '#FF1744' : '#424242'}
+            />
+          ))}
+        </LateralContent>
+      )}
     </Container>
   );
 };
