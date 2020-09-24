@@ -60,7 +60,7 @@ const RoomPage: React.FC = () => {
 
     // STREAMER: quando o streamer vai iniciar a stream -> Recebe os IDs dos viewers para criar um peer para cada
     socket.current.on(
-      'create_peers_to_start_stream',
+      'create_viewers_peers',
       async (receivedSocketsIDs: string[]) => {
         try {
           const mediaDevices = navigator.mediaDevices as any;
