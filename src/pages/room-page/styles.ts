@@ -18,12 +18,21 @@ export const MainContent = styled.div`
   width: 100%;
   height: 100%;
 
-  padding: 1rem;
+  padding: 1.5rem;
 `;
 
 export const VideoContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   width: 100%;
   height: 90%;
+
+  > video {
+    width: 100%;
+    height: 100%;
+  }
 `;
 
 export const SpinnerContainer = styled.div`
@@ -32,6 +41,17 @@ export const SpinnerContainer = styled.div`
   justify-content: center;
   width: 100%;
   height: 100%;
+`;
+
+export const ButtonsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  padding: calc(100vh - 90%) 0;
+
 `;
 
 export const Row = styled.div`

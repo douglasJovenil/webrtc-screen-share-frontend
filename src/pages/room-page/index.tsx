@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { useBeforeUnload } from 'react-use';
+import React, { useEffect, useState, useRef } from 'react';
+import { useBeforeUnload, useVideo } from 'react-use';
 import Peer, { SignalData } from 'simple-peer';
 import { useHistory } from 'react-router-dom';
 import io from 'socket.io-client';
@@ -11,10 +11,10 @@ import {
   VideoContainer,
   SpinnerContainer,
   Row,
+  ButtonsContainer,
 } from './styles';
 
 import ViewerCard from 'src/components/viewer-card';
-import Screen from 'src/components/screen';
 import Button from 'src/components/button';
 import Loader from 'react-loader-spinner';
 
@@ -26,6 +26,7 @@ interface AnswerPayload {
 const RoomPage: React.FC = () => {
   const [viewersSocketsIDs, setViewersSocketsIDs] = useState<string[]>([]);
   const [streamerSocketID, setStreamerSocketID] = useState<string>('');
+  const [video, , , videoRef] = useVideo(<video autoPlay muted />);
 
   const socket = useRef<SocketIOClient.Socket>();
   const stream = useRef<MediaStream>();
@@ -195,17 +196,18 @@ const RoomPage: React.FC = () => {
 
   // ALL: limpa as tracks da stream para evitar que o pop-up do google fique aberto e que o elemento HTML de video fique com fundo preto
   function cleanStreamTracks() {
-    stream.current.getVideoTracks().forEach((track) => {
-      stream.current.removeTrack(track);
-      track.stop();
-    });
+    if (stream.current) {
+      stream.current.getVideoTracks().forEach((track) => {
+        stream.current.removeTrack(track);
+        track.stop();
+      });
+    }
   }
 
   // ALL: seta a source do video com a stream
   function setMainVideo() {
     // Configura a stream do elemento video
-    const mainVideo = document.getElementById('main-video') as HTMLVideoElement;
-    mainVideo.srcObject = stream.current;
+    videoRef.current.srcObject = stream.current;
   }
 
   // ALL: verifica se existe um streamer na sala
@@ -232,29 +234,37 @@ const RoomPage: React.FC = () => {
       <MainContent>
         {roomHasStreamer() && (
           <VideoContainer>
-            <Screen id="main-video" autoPlay muted />
+            {video}
           </VideoContainer>
         )}
-
+        
         {!roomHasStreamer() && (
           <SpinnerContainer>
-            <Loader type="Circles" color="#212121" height={100} width={100} />
+            <Loader type="Circles" color="#212121" />
           </SpinnerContainer>
         )}
 
-        <Row>
-          {iAmTheStreamer() && (
-            <Button onClick={() => stopStream()} disabled={!roomHasStreamer()}>
-              Parar de Compartilhar
-            </Button>
-          )}
+        <ButtonsContainer>
+          <Row>
+            {iAmTheStreamer() && (
+              <Button
+                onClick={() => stopStream()}
+                disabled={!roomHasStreamer()}
+              >
+                Parar de Compartilhar
+              </Button>
+            )}
 
-          {!iAmTheStreamer() && (
-            <Button onClick={() => startStream()} disabled={roomHasStreamer()}>
-              Compartilhar tela
-            </Button>
-          )}
-        </Row>
+            {!iAmTheStreamer() && (
+              <Button
+                onClick={() => startStream()}
+                disabled={roomHasStreamer()}
+              >
+                Compartilhar tela
+              </Button>
+            )}
+          </Row>
+        </ButtonsContainer>
       </MainContent>
 
       <LateralContent>

@@ -20,8 +20,7 @@
     "simple-peer": "^9.7.2",
     "socket.io-client": "^2.3.0",
     "styled-components": "^5.2.0",
-    "typescript": "~3.7.2",
-    "use-before-unload": "^1.0.1"
+    "typescript": "~3.7.2"
   },
   "scripts": {
     "start": "react-scripts start",
