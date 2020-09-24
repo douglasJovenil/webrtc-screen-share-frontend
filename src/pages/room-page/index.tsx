@@ -30,7 +30,6 @@ const RoomPage: React.FC = () => {
   const [viewersName, setViewersName] = useState<string[]>([]);
   const [myName, setMyName] = useState<string>('');
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
-  const [errorOccurred, setErrorOccurred] = useState<boolean>(false);
   const [iAmTheStreamer, setIAmTheStreamer] = useState<boolean>(false);
   const socket = useRef<SocketIOClient.Socket>();
   const stream = useRef<MediaStream>();
@@ -68,7 +67,7 @@ const RoomPage: React.FC = () => {
 
           // Para cada viwer conectado na sala um peer eh criado e salvo em peers
           receivedSocketsIds.forEach((socketId) => {
-            savePeer(socketId, createOfferPeer(socketId));
+            savePeer(socketId, createOfferPeer(socketId, stream.current));
           });
         } catch {
           socket.current.disconnect();
@@ -81,7 +80,7 @@ const RoomPage: React.FC = () => {
     // STREAMER: solicitacao para adicionar um novo viewer
     // quando a streamer ja estiver acontecendo
     socket.current.on('add_new_peer', (socketId: string) => {
-      savePeer(socketId, createOfferPeer(socketId));
+      savePeer(socketId, createOfferPeer(socketId, stream.current));
     });
 
     // STREAMER: quando o streamer recebe a resposta dos viewers
@@ -133,8 +132,7 @@ const RoomPage: React.FC = () => {
 
     // VIEWER: quando a sala estiver cheia
     socket.current.on('full_room', () => {
-      // setErrorOccurred(true);
-      window.location.href = '/error';
+      history.push('/error');
     });
   }, []);
 
@@ -152,12 +150,12 @@ const RoomPage: React.FC = () => {
     socket.current.disconnect();
   });
 
-  function createOfferPeer(socketId: string) {
+  function createOfferPeer(socketId: string, stream: MediaStream) {
     // cria um peer usando a captura de tela do streamer
     const peer = new Peer({
       initiator: true,
       trickle: false,
-      stream: stream.current,
+      stream: stream,
     });
 
     // callback para enviar a offer para o servidor
@@ -226,8 +224,8 @@ const RoomPage: React.FC = () => {
     socket.current.emit('stop_stream');
   }
 
-  function stopSharingScreen() {
-    stream.current.getVideoTracks().forEach((track) => {
+  function stopSharingScreen(stream: MediaStream) {
+    stream.getVideoTracks().forEach((track) => {
       track.stop();
       stopStream();
     });
@@ -253,7 +251,7 @@ const RoomPage: React.FC = () => {
         )}
         <Row>
           {iAmTheStreamer ? (
-            <Button onClick={() => stopSharingScreen()} disabled={!isStreaming}>
+            <Button onClick={() => stopSharingScreen(stream.current)} disabled={!isStreaming}>
               Parar de Compartilhar
             </Button>
           ) : (
