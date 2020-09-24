@@ -106,7 +106,8 @@ const RoomPage: React.FC = () => {
     socket.current.on(
       'send_viewers_of_room',
       (receivedSocketsIds: string[]) => {
-        setViewersName([...viewersName, ...receivedSocketsIds]);
+        // setViewersName([...viewersName, ...receivedSocketsIds]);
+        setViewersName(receivedSocketsIds);
       }
     );
 
