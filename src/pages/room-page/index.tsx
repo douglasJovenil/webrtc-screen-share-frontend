@@ -45,6 +45,19 @@ const RoomPage: React.FC = () => {
     // ALL: solicitacao para entrar na sala
     socket.current.emit('join_room');
 
+    // VIEWER: quando a sala estiver cheia -> Redireciona para tela de erro
+    socket.current.on('full_room', () => {
+      history.push('/error');
+    });
+
+    // VIEWER: quando alguem entra na sala pela PRIMEIRA vez -> Quem acabou de entrar recebe todos os integrantes da sala para atualizar a UI
+    socket.current.on(
+      'send_viewers_of_room',
+      (receivedSocketsIDs: string[]) => {
+        setViewersSocketsIDs(receivedSocketsIDs);
+      }
+    );
+
     // STREAMER: quando o streamer vai iniciar a stream -> Recebe os IDs dos viewers para criar um peer para cada
     socket.current.on(
       'create_peers_to_start_stream',
@@ -72,9 +85,9 @@ const RoomPage: React.FC = () => {
       }
     );
 
-    // STREAMER: solicitacao para adicionar um novo viewer -> Ocorre quando a stream ja estiver acontecendo
-    socket.current.on('add_new_peer', (socketID: string) => {
-      peers.current.set(socketID, createOfferPeer(socketID));
+    // VIEWER: quando o streamer solicita que o viewer crie um peer -> Necessario para dar continuidade no handshake
+    socket.current.on('create_answer', (offer: SignalData) => {
+      createAnswerPeer(offer);
     });
 
     // STREAMER: quando o streamer recebe a resposta da conexao WebRTC dos viewers -> Necessario para finalizar o handshake e comecar a transmissao
@@ -82,23 +95,20 @@ const RoomPage: React.FC = () => {
       peers.current.get(answer.socketID).signal(answer.signal);
     });
 
+    // ALL: quando o streamer inicia a transmissao -> Informa os integrantes para atualizar a UI
+    socket.current.on('streamer_joined', (socketID: string) => {
+      setStreamerSocketID(socketID);
+    });
+
+    // STREAMER: solicitacao para adicionar um novo viewer -> Ocorre quando a stream ja estiver acontecendo
+    socket.current.on('add_new_peer', (socketID: string) => {
+      peers.current.set(socketID, createOfferPeer(socketID));
+    });
+
     // STREAMER: quando algum viewer sai da sala -> Deleta o peer do viewer que saiu. Esse metodo nao atualiza a UI, ela sera atualizada posteriormente pelo topico viewer_quit
     socket.current.on('delete_peer', (socketID: string) => {
       peers.current.delete(socketID);
     });
-
-    // VIEWER: quando o streamer solicita que o viewer crie um peer -> Necessario para dar continuidade no handshake
-    socket.current.on('create_answer', (offer: SignalData) => {
-      createAnswerPeer(offer);
-    });
-
-    // VIEWER: quando alguem entra na sala pela PRIMEIRA vez -> Quem acabou de entrar recebe todos os integrantes da sala para atualizar a UI
-    socket.current.on(
-      'send_viewers_of_room',
-      (receivedSocketsIDs: string[]) => {
-        setViewersSocketsIDs(receivedSocketsIDs);
-      }
-    );
 
     // ALL: quando alguem entra na sala e a stream ja comecou -> Os integrantes da sala com excecao de quem acabou de entrar recebe o ID de quem entrou para atualizar a UI
     socket.current.on('viewer_joined', (socketID: string) => {
@@ -111,19 +121,9 @@ const RoomPage: React.FC = () => {
         previousViewers.filter((id) => id !== socketID)
       );
     });
-
-    // ALL: quando alguem comeca uma stream -> Informa os integrantes para atualizar a UI
-    socket.current.on('streamer_joined', (socketID: string) => {
-      setStreamerSocketID(socketID);
-    });
-
-    // VIEWER: quando a sala estiver cheia -> Redireciona para tela de erro
-    socket.current.on('full_room', () => {
-      history.push('/error');
-    });
   }, []);
 
-  // Chamado ao fechar a aba do navegador
+  // ALL: Chamado ao fechar a aba do navegador
   useBeforeUnload(() => {
     socket.current.disconnect();
   });
@@ -158,7 +158,7 @@ const RoomPage: React.FC = () => {
       socket.current.emit('send_answer', answer);
     });
 
-    // Quando receber a stream -> Mostra na tela  
+    // Quando receber a stream -> Mostra na tela
     peer.on('stream', (streamReceived: MediaStream) => {
       stream.current = streamReceived;
       setMainVideo();
