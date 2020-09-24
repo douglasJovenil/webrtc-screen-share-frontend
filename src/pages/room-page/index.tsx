@@ -28,13 +28,10 @@ const RoomPage: React.FC = () => {
     new Map<string, Peer.Instance>()
   );
   const [viewersName, setViewersName] = useState<string[]>([]);
+  const [streamerName, setStreamerName] = useState<string>(null);
   const [myName, setMyName] = useState<string>('');
   const socket = useRef<SocketIOClient.Socket>();
   const stream = useRef<MediaStream>();
-
-  const [addViewerName, setAddViewerName] = useState<string>('');
-  const [removeViewerName, setRemoveViewerName] = useState<string>('');
-  const [streamerName, setStreamerName] = useState<string>(null);
 
   const history = useHistory();
 
@@ -50,11 +47,11 @@ const RoomPage: React.FC = () => {
     // Deve ser criado um peer para cada viwer
     socket.current.on(
       'create_peers_to_start_stream',
-      async (receivedSocketsIds: string[]) => {
+      (receivedSocketsIds: string[]) => {
         try {
           // Aquisicao da captura de tela
           const mediaDevices = navigator.mediaDevices as any;
-          stream.current = await mediaDevices.getDisplayMedia();
+          stream.current = mediaDevices.getDisplayMedia();
         } catch {
           socket.current.disconnect();
           stopStream();
@@ -111,13 +108,15 @@ const RoomPage: React.FC = () => {
 
     // VIEWER: quando alguem entra na sala
     socket.current.on('viewer_joined', (socketId: string) => {
-      setAddViewerName(socketId);
+      setViewersName((previousViewers) => [...previousViewers, socketId]);
     });
 
     // VIEWER: quando alguem sai da sala
     // todos recebem os ID de quem saiu para atualizar a UI
     socket.current.on('viewer_quit', (socketId: string) => {
-      setRemoveViewerName(socketId);
+      setViewersName((previousViewers) => {
+        previousViewers.filter((id) => id !== socketId);
+      });
     });
 
     // VIEWER | STREAMER: quando o viewer consegue entrar na sala
@@ -135,14 +134,6 @@ const RoomPage: React.FC = () => {
       history.push('/error');
     });
   }, []);
-
-  useEffect(() => {
-    setViewersName([...viewersName, addViewerName]);
-  }, [addViewerName]);
-
-  useEffect(() => {
-    setViewersName(viewersName.filter((id) => id !== removeViewerName));
-  }, [removeViewerName]);
 
   // Chamado ao fechar a aba
   useBeforeUnload(() => {
@@ -254,10 +245,7 @@ const RoomPage: React.FC = () => {
 
         <Row>
           {iAmTheStreamer() && (
-            <Button
-              onClick={() => stopStream()}
-              disabled={!roomHasStreamer()}
-            >
+            <Button onClick={() => stopStream()} disabled={!roomHasStreamer()}>
               Parar de Compartilhar
             </Button>
           )}
@@ -273,7 +261,7 @@ const RoomPage: React.FC = () => {
       <LateralContent>
         <ViewerCard
           label={myName}
-          colorIcon={streamerName === myName ? '#FF1744' : '#2979FF'}
+          colorIcon={iAmTheStreamer() ? '#FF1744' : '#2979FF'}
         />
         {viewersName.map((name) => (
           <ViewerCard
