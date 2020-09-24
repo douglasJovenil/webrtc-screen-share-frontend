@@ -29,7 +29,6 @@ const RoomPage: React.FC = () => {
   );
   const [viewersName, setViewersName] = useState<string[]>([]);
   const [myName, setMyName] = useState<string>('');
-  const [iAmTheStreamer, setIAmTheStreamer] = useState<boolean>(false);
   const socket = useRef<SocketIOClient.Socket>();
   const stream = useRef<MediaStream>();
 
@@ -106,7 +105,6 @@ const RoomPage: React.FC = () => {
     socket.current.on(
       'send_viewers_of_room',
       (receivedSocketsIds: string[]) => {
-        // setViewersName([...viewersName, ...receivedSocketsIds]);
         setViewersName(receivedSocketsIds);
       }
     );
@@ -205,7 +203,6 @@ const RoomPage: React.FC = () => {
 
   function startStream() {
     // Indica que o usuario em questao gostaria de compartilhar sua tela
-    setIAmTheStreamer(true);
     socket.current.emit('start_stream');
   }
 
@@ -214,7 +211,6 @@ const RoomPage: React.FC = () => {
     peers.forEach((peer) => peer.destroy());
     peers.clear();
     setPeers(new Map(peers));
-    setIAmTheStreamer(false);
     // Informa o servidor que o streamer parou de compartilhar a tela
     socket.current.emit('stop_stream');
   }
@@ -236,6 +232,10 @@ const RoomPage: React.FC = () => {
     return (streamerName === null || streamerName === '') ? false : true;
   }
 
+  function iAmTheStreamer(): boolean {
+    return (streamerName === myName);
+  }
+
   return (
     <Container>
       <MainContent>
@@ -252,7 +252,7 @@ const RoomPage: React.FC = () => {
         )}
 
         <Row>
-          {iAmTheStreamer && (
+          {iAmTheStreamer() && (
             <Button
               onClick={() => stopSharingScreen(stream.current)}
               disabled={!roomHasStreamer()}
@@ -261,7 +261,7 @@ const RoomPage: React.FC = () => {
             </Button>
           )}
 
-          {!iAmTheStreamer && (
+          {!iAmTheStreamer() && (
             <Button onClick={() => startStream()} disabled={roomHasStreamer()}>
               Compartilhar tela
             </Button>
