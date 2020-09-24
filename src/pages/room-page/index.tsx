@@ -26,6 +26,7 @@ interface AnswerPayload {
 const RoomPage: React.FC = () => {
   const [viewersSocketsIDs, setViewersSocketsIDs] = useState<string[]>([]);
   const [streamerSocketID, setStreamerSocketID] = useState<string>('');
+  const [unloadPage, setUnloadPage] = useState<boolean>(false);
 
   const socket = useRef<SocketIOClient.Socket>();
   const stream = useRef<MediaStream>();
@@ -123,11 +124,16 @@ const RoomPage: React.FC = () => {
     });
   }, []);
 
-  // ALL: Chamado ao fechar a aba do navegador
+  // ALL: Dispara o handler para quando a aba do navegador eh fechada
   useBeforeUnload(() => {
-    socket.current.emit('stop_stream');
-    socket.current.disconnect();
+    setUnloadPage(true);
   });
+
+  // ALL: Handler para fechar a aba -> Caso o streamer feche a aba, os viewers devem ser informados
+  useEffect(() => {
+    if (unloadPage && iAmTheStreamer()) socket.current.emit('stop_stream');
+    if (unloadPage) socket.current.disconnect();
+  }, [unloadPage]);
 
   // STREAMER: cria um peer usando a captura de tela do streamer
   function createOfferPeer(socketID: string) {
