@@ -125,6 +125,7 @@ const RoomPage: React.FC = () => {
 
   // ALL: Chamado ao fechar a aba do navegador
   useBeforeUnload(() => {
+    socket.current.emit('stop_stream');
     socket.current.disconnect();
   });
 
