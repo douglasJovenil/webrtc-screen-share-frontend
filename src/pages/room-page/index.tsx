@@ -223,7 +223,7 @@ const RoomPage: React.FC = () => {
   // ALL: Retorna o proprio socketID
   function getSocketID(): string {
     if (socket.current) {
-      return socket.current.id;
+      return socket.current.id ? socket.current.id : '';
     }
     return '';
   }
