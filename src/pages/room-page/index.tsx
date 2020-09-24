@@ -104,7 +104,7 @@ const RoomPage: React.FC = () => {
 
     // VIEWER: quando alguem entra na sala, recebe todos os integrantes da sala
     socket.current.on(
-      'send_viewers_at_room',
+      'send_viewers_of_room',
       (receivedSocketsIds: string[]) => {
         setViewersName([...viewersName, ...receivedSocketsIds]);
       }
