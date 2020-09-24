@@ -64,7 +64,7 @@ const RoomPage: React.FC = () => {
         });
 
         // Mostra na tela do streamer sua propria captura de tela
-        setMainVideo(stream.current);
+        setMainVideo();
 
         // Para cada viwer conectado na sala um peer eh criado e salvo em peers
         receivedSocketsIds.forEach((socketId) => {
@@ -171,8 +171,13 @@ const RoomPage: React.FC = () => {
     });
 
     // Quando receber uma stream, mostra na tela o que esta recebendo
-    peer.on('stream', (stream: MediaStream) => {
-      setMainVideo(stream);
+    peer.on('stream', (streamReceived: MediaStream) => {
+      stream.current = streamReceived;
+      setMainVideo();
+    });
+
+    peer.on('close', () => {
+      cleanStreamTracks();
     });
 
     // Quando o streamer parar a transmissao
@@ -193,20 +198,23 @@ const RoomPage: React.FC = () => {
     // Limpa os peers
     peers.current.forEach((peer) => peer.destroy());
     peers.current.clear();
+    cleanStreamTracks();
+    // Informa o servidor que o streamer parou de compartilhar a tela
+    socket.current.emit('stop_stream');
+  }
 
+  function cleanStreamTracks() {
     stream.current.getVideoTracks().forEach((track) => {
       stream.current.removeTrack(track);
       track.stop();
     });
 
-    // Informa o servidor que o streamer parou de compartilhar a tela
-    socket.current.emit('stop_stream');
   }
 
-  function setMainVideo(stream: MediaStream) {
+  function setMainVideo() {
     // Configura a stream do elemento video
     const mainVideo = document.getElementById('main-video') as HTMLVideoElement;
-    mainVideo.srcObject = stream;
+    mainVideo.srcObject = stream.current;
   }
 
   function roomHasStreamer(): boolean {
