@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import useBeforeUnload from 'use-before-unload';
 import Peer, { SignalData } from 'simple-peer';
+import { useHistory } from 'react-router-dom';
 import io from 'socket.io-client';
 
 import {
@@ -16,7 +17,6 @@ import ViewerCard from 'src/components/viewer-card';
 import Screen from 'src/components/screen';
 import Button from 'src/components/button';
 import Loader from 'react-loader-spinner';
-import { useHistory } from 'react-router-dom';
 
 interface AnswerPayload {
   signal: SignalData;
@@ -41,15 +41,15 @@ const RoomPage: React.FC = () => {
         ? 'feracode-backend.herokuapp.com'
         : 'localhost:8080'
     );
-    // Cliente solicita ao servidor pedindo para entrar na sala
+
+    // ALL: solicitacao para entrar na sala
     socket.current.emit('join_room');
-    // STREAMER: quando o streamer vai iniciar a stream
-    // Deve ser criado um peer para cada viwer
+
+    // STREAMER: quando o streamer vai iniciar a stream -> Recebe os IDs dos viewers para criar um peer para cada
     socket.current.on(
       'create_peers_to_start_stream',
       async (receivedSocketsIDs: string[]) => {
         try {
-          // Aquisicao da captura de tela
           const mediaDevices = navigator.mediaDevices as any;
           stream.current = await mediaDevices.getDisplayMedia();
         } catch {
@@ -57,7 +57,7 @@ const RoomPage: React.FC = () => {
           return;
         }
 
-        // Callback para quando o streamer para de compartilhar a tela
+        // Callback para quando o streamer parar de compartilhar -> Ocorre quando for clicado no botao que aparece no pop-up do navegador
         stream.current.getVideoTracks().forEach((track) => {
           track.onended = stopStream;
         });
@@ -65,37 +65,34 @@ const RoomPage: React.FC = () => {
         // Mostra na tela do streamer sua propria captura de tela
         setMainVideo();
 
-        // Para cada viwer conectado na sala um peer eh criado e salvo em peers
+        // Cria um peer para cada viewer
         receivedSocketsIDs.forEach((socketID) => {
           peers.current.set(socketID, createOfferPeer(socketID));
         });
       }
     );
 
-    // STREAMER: solicitacao para adicionar um novo viewer
-    // quando a streamer ja estiver acontecendo
+    // STREAMER: solicitacao para adicionar um novo viewer -> Ocorre quando a stream ja estiver acontecendo
     socket.current.on('add_new_peer', (socketID: string) => {
       peers.current.set(socketID, createOfferPeer(socketID));
     });
 
-    // STREAMER: quando o streamer recebe a resposta dos viewers
+    // STREAMER: quando o streamer recebe a resposta da conexao WebRTC dos viewers -> Necessario para finalizar o handshake e comecar a transmissao
     socket.current.on('accept_answer', (answer: AnswerPayload) => {
-      // Procura pelo peer do viewer especifico para finalizar o handshake
       peers.current.get(answer.socketID).signal(answer.signal);
     });
 
-    // STREAMER: quando algum viewer sai da sala
+    // STREAMER: quando algum viewer sai da sala -> Deleta o peer do viewer que saiu. Esse metodo nao atualiza a UI, ela sera atualizada posteriormente pelo topico viewer_quit
     socket.current.on('delete_peer', (socketID: string) => {
-      // Deleta o peer do viewer que saiu
       peers.current.delete(socketID);
     });
 
-    // VIEWER: quando o streamer solicita que o viewer crie um peer
+    // VIEWER: quando o streamer solicita que o viewer crie um peer -> Necessario para dar continuidade no handshake
     socket.current.on('create_answer', (offer: SignalData) => {
       createAnswerPeer(offer);
     });
 
-    // VIEWER: quando alguem entra na sala, recebe todos os integrantes da sala
+    // VIEWER: quando alguem entra na sala pela PRIMEIRA vez -> Quem acabou de entrar recebe todos os integrantes da sala para atualizar a UI
     socket.current.on(
       'send_viewers_of_room',
       (receivedSocketsIDs: string[]) => {
@@ -103,46 +100,43 @@ const RoomPage: React.FC = () => {
       }
     );
 
-    // VIEWER: quando alguem entra na sala
+    // ALL: quando alguem entra na sala e a stream ja comecou -> Os integrantes da sala com excecao de quem acabou de entrar recebe o ID de quem entrou para atualizar a UI
     socket.current.on('viewer_joined', (socketID: string) => {
       setViewersSocketsIDs((previousViewers) => [...previousViewers, socketID]);
     });
 
-    // VIEWER: quando alguem sai da sala
-    // todos recebem os ID de quem saiu para atualizar a UI
+    // ALL: quando alguem sai da sala -> Os integrantes recebem o ID de quem saiu para atualizar a UI
     socket.current.on('viewer_quit', (socketID: string) => {
       setViewersSocketsIDs((previousViewers) =>
         previousViewers.filter((id) => id !== socketID)
       );
     });
 
-    // VIEWER: quando alguem comeca uma stream
-    // informa os viewers para atualizar a UI
+    // ALL: quando alguem comeca uma stream -> Informa os integrantes para atualizar a UI
     socket.current.on('streamer_joined', (socketID: string) => {
       setStreamerSocketID(socketID);
     });
 
-    // VIEWER: quando a sala estiver cheia
+    // VIEWER: quando a sala estiver cheia -> Redireciona para tela de erro
     socket.current.on('full_room', () => {
       history.push('/error');
     });
   }, []);
 
-  // Chamado ao fechar a aba
+  // Chamado ao fechar a aba do navegador
   useBeforeUnload(() => {
-    // Desconecta o socket do usuario em questao
     socket.current.disconnect();
   });
 
+  // STREAMER: cria um peer usando a captura de tela do streamer
   function createOfferPeer(socketID: string) {
-    // cria um peer usando a captura de tela do streamer
     const peer = new Peer({
       initiator: true,
       trickle: false,
       stream: stream.current,
     });
 
-    // callback para enviar a offer para o servidor
+    // Callback para enviar a iniciar a conexao WebRTC -> Envia para o servidor
     peer.on('signal', (signal: SignalData) => {
       socket.current.emit('send_offer', { signal, socketID });
     });
@@ -152,25 +146,25 @@ const RoomPage: React.FC = () => {
     return peer;
   }
 
+  // VIEWER: cria o peer que vai receber a stream
   function createAnswerPeer(offer: SignalData) {
-    // Cria o peer dos viewers, esse peer nao precisa ser salvo
-    // precisa apenas enviar a resposta para o streamer
     const peer = new Peer({
       initiator: false,
       trickle: false,
     });
 
-    // Envia a resposta para o servidor
+    // Quando receber a resposta da conexao WebRTC -> Envia para o servidor
     peer.on('signal', (answer: SignalData) => {
       socket.current.emit('send_answer', answer);
     });
 
-    // Quando receber uma stream, mostra na tela o que esta recebendo
+    // Quando receber a stream -> Mostra na tela  
     peer.on('stream', (streamReceived: MediaStream) => {
       stream.current = streamReceived;
       setMainVideo();
     });
 
+    // Quando o peer for fechado -> Limpa as tracks da stream para evitar que o elemento video do HTML fique com fundo preto
     peer.on('close', () => {
       cleanStreamTracks();
     });
@@ -180,47 +174,50 @@ const RoomPage: React.FC = () => {
       console.log('streamer parou a transmissao');
     });
 
-    // Gera a resposta
+    // Gera a resposta para disparar a callback de signal -> Esse peer nao precisa ser salvo pois ao enviar a resposta pro streamer o handshake sera finalizado
     peer.signal(offer);
   }
 
+  // ALL: Indica que o integrante em questao gostaria de compartilhar sua tela -> Esse integrante passara a ser o streamer, todos os participantes da sala serao notificados
   function startStream() {
-    // Indica que o usuario em questao gostaria de compartilhar sua tela
     socket.current.emit('start_stream');
   }
 
+  // STREAMER: Limpa os peers, as tracks da stream e notifica os viewers da sala que parou de compartilhar a tela
   function stopStream() {
-    // Limpa os peers
     peers.current.forEach((peer) => peer.destroy());
     peers.current.clear();
     cleanStreamTracks();
-    // Informa o servidor que o streamer parou de compartilhar a tela
     socket.current.emit('stop_stream');
   }
 
+  // ALL: limpa as tracks da stream para evitar que o pop-up do google fique aberto e que o elemento HTML de video fique com fundo preto
   function cleanStreamTracks() {
     stream.current.getVideoTracks().forEach((track) => {
       stream.current.removeTrack(track);
       track.stop();
     });
-
   }
 
+  // ALL: seta a source do video com a stream
   function setMainVideo() {
     // Configura a stream do elemento video
     const mainVideo = document.getElementById('main-video') as HTMLVideoElement;
     mainVideo.srcObject = stream.current;
   }
 
+  // ALL: verifica se existe um streamer na sala
   function roomHasStreamer(): boolean {
     return streamerSocketID === null || streamerSocketID === '' ? false : true;
   }
 
+  // ALL: verifica se o usuario em questao eh o streamer
   function iAmTheStreamer(): boolean {
     const socketID = getSocketID();
     return socketID !== '' && streamerSocketID === socketID;
   }
 
+  // ALL: Retorna o proprio socketID
   function getSocketID(): string {
     if (socket.current) {
       return socket.current.id;
