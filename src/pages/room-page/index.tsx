@@ -245,14 +245,20 @@ const RoomPage: React.FC = () => {
     return getSocketID().length > 1 ? true : false;
   }
 
+  // ALL: Retorna se a cliente em questao possui uma stream ativa
+  function hasStream(): boolean {
+    if (stream.current) return stream.current.active;
+    return false;
+  }
+
   return (
     <Container>
       <MainContent>
-        <VideoContainer className={!roomHasStreamer() ? 'hide' : ''}>
+        <VideoContainer className={!hasStream() ? 'hide' : ''}>
           {video}
         </VideoContainer>
 
-        {!roomHasStreamer() && (
+        {!hasStream() && (
           <SpinnerContainer>
             <Loader type="Circles" color="#212121" />
           </SpinnerContainer>
