@@ -1,4 +1,4 @@
-# Feracode Fron-tend
+# Feracode Front-end
 
 Simple application using WebRTC technology to screen share, this current version supports up to four peoples in the room, where one is the streamer and the rest are the viewers. Just one person can stream at time, if someone else want to stream they have to await the streamer end the transmission then new streams will be available.
 
