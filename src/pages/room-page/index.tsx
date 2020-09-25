@@ -71,9 +71,10 @@ const RoomPage: React.FC = () => {
         }
 
         // Callback para quando o streamer parar de compartilhar -> Ocorre quando for clicado no botao que aparece no pop-up do navegador
-        stream.current.getVideoTracks().forEach((track) => {
-          track.onended = stopStream;
-        });
+        if (stream.current)
+          stream.current.getVideoTracks().forEach((track) => {
+            track.onended = stopStream;
+          });
 
         // Mostra na tela do streamer sua propria captura de tela
         setMainVideo();
@@ -92,7 +93,10 @@ const RoomPage: React.FC = () => {
 
     // STREAMER: quando o streamer recebe a resposta da conexao WebRTC dos viewers -> Necessario para finalizar o handshake e comecar a transmissao
     socket.current.on('accept_answer', (answer: AnswerPayload) => {
-      peers.current.get(answer.socketID).signal(answer.signal);
+      const peer: Peer.Instance | undefined = peers.current.get(
+        answer.socketID
+      );
+      if (peer) peer.signal(answer.signal);
     });
 
     // ALL: quando o streamer inicia a transmissao -> Informa os integrantes para atualizar a UI
@@ -125,8 +129,10 @@ const RoomPage: React.FC = () => {
 
   // ALL: Handler para fechar a aba -> Caso o streamer feche a aba, os viewers devem ser informados
   useBeforeUnload(() => {
-    if (iAmTheStreamer()) socket.current.emit('stop_stream');
-    socket.current.disconnect();
+    if (socket.current) {
+      if (iAmTheStreamer()) socket.current.emit('stop_stream');
+      socket.current.disconnect();
+    }
     return true;
   });
 
@@ -140,7 +146,8 @@ const RoomPage: React.FC = () => {
 
     // Callback para enviar a iniciar a conexao WebRTC -> Envia para o servidor
     peer.on('signal', (signal: SignalData) => {
-      socket.current.emit('send_offer', { signal, socketID });
+      if (socket.current)
+        socket.current.emit('send_offer', { signal, socketID });
     });
 
     peer.on('error', () => console.log(`viewer ${socketID} desconectou`));
@@ -157,7 +164,7 @@ const RoomPage: React.FC = () => {
 
     // Quando receber a resposta da conexao WebRTC -> Envia para o servidor
     peer.on('signal', (answer: SignalData) => {
-      socket.current.emit('send_answer', answer);
+      if (socket.current) socket.current.emit('send_answer', answer);
     });
 
     // Quando receber a stream -> Mostra na tela
@@ -182,32 +189,36 @@ const RoomPage: React.FC = () => {
 
   // ALL: Indica que o integrante em questao gostaria de compartilhar sua tela -> Esse integrante passara a ser o streamer, todos os participantes da sala serao notificados
   function startStream() {
-    socket.current.emit('start_stream');
+    if (socket.current) socket.current.emit('start_stream');
   }
 
   // STREAMER: Limpa os peers, as tracks da stream e notifica os viewers da sala que parou de compartilhar a tela
   function stopStream() {
-    peers.current.forEach((peer) => peer.destroy());
-    peers.current.clear();
+    if (peers.current.size > 0) {
+      peers.current.forEach((peer) => peer.destroy());
+      peers.current.clear();
+    }
     cleanStreamTracks();
-    socket.current.emit('stop_stream');
+    if (socket.current) socket.current.emit('stop_stream');
   }
 
   // ALL: limpa as tracks da stream para evitar que o pop-up do google fique aberto e que o elemento HTML de video fique com fundo preto
   function cleanStreamTracks() {
     if (stream.current) {
-      stream.current.getVideoTracks().forEach((track) => {
-        stream.current.removeTrack(track);
+      const currentStream = stream.current;
+      currentStream.getVideoTracks().forEach((track) => {
+        currentStream.removeTrack(track);
         track.stop();
       });
-      videoRef.current.srcObject = null;
+      if (videoRef.current) videoRef.current.srcObject = null;
     }
   }
 
   // ALL: seta a source do video com a stream
   function setMainVideo() {
     // Configura a stream do elemento video
-    videoRef.current.srcObject = stream.current;
+    if (videoRef.current && stream.current)
+      videoRef.current.srcObject = stream.current;
   }
 
   // ALL: verifica se existe um streamer na sala
