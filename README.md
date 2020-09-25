@@ -1,4 +1,4 @@
-# Feracode Frontend
+# Feracode Fron-tend
 
 Simple application using WebRTC technology to screen share, this current version supports up to four peoples in the room, where one is the streamer and the rest are the viewers. Just one person can stream at time, if someone else want to stream they have to await the streamer end the transmission then new streams will be available.
 
@@ -59,8 +59,6 @@ This project was developed with the following technologies:
 <img align="left" alt="WebRTC" width="26px" src="https://i.imgur.com/9C5ScMM.png" > WebRTC
 
 <img align="left" alt="SocketIO" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/9/96/Socket-io.svg" /> SocketIO
-
-<br/>
 
 ## Usage
 
