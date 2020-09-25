@@ -41,7 +41,7 @@ const RoomPage: React.FC = () => {
         ? 'feracode-backend.herokuapp.com'
         : 'localhost:8080'
     );
-
+    
     // ALL: solicitacao para entrar na sala
     socket.current.emit('join_room');
 
@@ -66,7 +66,7 @@ const RoomPage: React.FC = () => {
           const mediaDevices = navigator.mediaDevices as any;
           stream.current = await mediaDevices.getDisplayMedia();
         } catch {
-          stopStream();
+          if (socket.current) socket.current.emit('stop_stream');
           return;
         }
 
@@ -245,11 +245,6 @@ const RoomPage: React.FC = () => {
     return getSocketID().length > 1 ? true : false;
   }
 
-  // ALL: Retorna se o socket esta desconectado
-  function isSocketDisconnected(): boolean {
-    return !isSocketConnected();
-  }
-
   return (
     <Container>
       <MainContent>
@@ -273,7 +268,7 @@ const RoomPage: React.FC = () => {
           {!iAmTheStreamer() && (
             <Button
               onClick={() => startStream()}
-              disabled={roomHasStreamer() || isSocketDisconnected()}
+              disabled={roomHasStreamer() || !isSocketConnected()}
             >
               Compartilhar tela
             </Button>
