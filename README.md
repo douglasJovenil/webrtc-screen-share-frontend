@@ -27,7 +27,7 @@ Simple application using WebRTC technology to screen share, this current version
    <img src="./img/02_usuario_iniciando_stream.png">
 </p>
 
-#### Viewer screen while streamer select an streaming source
+#### Viewer screen while streamer select a streaming source
 
 <p align="center">
    <img src="./img/04_tela_do_viewer_quando_o_streamer_esta_selecionando_uma_fonte.png">
@@ -67,3 +67,8 @@ cd feracode_frontend
 yarn install
 yarn start
 ```
+
+## 📔 TODO
+- Fix the bug that occurs when a user try to join the room and the streamer finish the stream
+- Develop environment variables to use at Heroku
+- Configure CORS
