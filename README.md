@@ -1,36 +1,71 @@
 # Feracode Frontend
 
-Crie uma aplicação simples em WebRTC para o compartilhamento de tela aonde multiplas pessoas possam compartilhar e assistir o compartilhamento de tela em uma mesma chamada. O compartilhamento não pode ser somente p2p, é necessário que pelo menos 3 pessoas possam se connectar e ver a tela sendo compartilhada, os mesmos 3 usuarios devem poder compartilhar suas telas também (não é necessario que todos compartilhem simultaneamente, somente que os 3 tenham a opção de compartilhar suas telas). Para submiter seu teste, envie-nos o link para aplicação e acesso ao repositório (o código deve ser de sua autoria). Indicamos a utilização da versão gratuita do heroku para realizar o teste, porém fica a seu critério utilizar seu próprio servidor ou qualquer outro assim como uma url propria ou a gratuita do heroku ou qualquer outro serviço. Os links podem ser enviados por aqui mesmo.
+Simple application using WebRTC technology to screen share, this current version supports up to four peoples in the room, where one is the streamer and the rest are the viewers. Just one person can stream at time, if someone else want to stream they have to await the streamer end the transmission then new streams will be available.
 
+## ☁️ Links
 
-arrumar origin no backend
+- <a href="https://feracode-frontend.herokuapp.com" target="_blank">Live preview</a>
+- <a href="https://github.com/douglasJovenil/feracode_backend" target="_blank">Back-end code</a>
 
-acontece erro quando alguem esta entrando na sala e o streamer quita
+## 💻 Project
 
-backend
+#### User alone in the room
 
-trocar a var para const
+<p align="center">
+   <img src="./img/00_usuario_sozinho_na_sala.png">
+</p>
 
+#### Two users in the room
 
-join_room -> solicitacao para entrar na sala
-add_new_peer -> solicita que o stremaer adicione um peer | se tiver steramer
-send_streamer -> informa que entrou sobre quem é o streamer | se tiver streamer
-full_room -> Informa que a sala esta cheia
-create_answer -> Informa o viewer que deve criar uma resposta para conexão WebRTC
-accept_answer -> Envia a resposta do viewer para o streamer
-delete_peer -> Informa que o streamer delete o peer que saiu
-stop_stream -> O streamer informa que parou a transmissao
-start_stream -> O integrante informa que vai iniciar a stream
-send_offer -> O streamer envia o signal da conexão WebRTC
-send_answer -> O viewer envia o signal da conexão WebRTC
-send_who_is_in_the_room -> Informar os integrantes da sala
-create_viewers_peers -> Informa pro streamer criar os peers
+<p align="center">
+   <img src="./img/01_dois_usuario_na_sala.png">
+</p>
 
+#### User starting a stream
 
-viewer_joined -> Informa os integrantes que alguem entrou na sala
-send_who_joined
+<p align="center">
+   <img src="./img/02_usuario_iniciando_stream.png">
+</p>
 
-viewer_quit -> Informa os integrantes que alguem saiu da sala
-send_who_quit
+#### Viewer screen while streamer select an streaming source
 
+<p align="center">
+   <img src="./img/04_tela_do_viewer_quando_o_streamer_esta_selecionando_uma_fonte.png">
+</p>
 
+#### Streamer screen during the stream
+
+<p align="center">
+   <img src="./img/05_tela_do_streamer_durante_stream.png">
+</p>
+
+#### Viewer screen during the stream
+
+<p align="center">
+   <img src="./img/06_tela_do_viewer_durante_stream.png">
+</p>
+
+## 🚀 Technologies
+
+This project was developed with the following technologies:
+
+<img align="left" alt="Typescript" width="26px" src="https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/typescript/typescript.png" /> Typescript
+
+<img align="left" alt="ReactJS" width="26px" src="https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/react/react.png" /> ReactJS
+
+<img align="left" alt="styled-components" width="26px" src="https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/styled-components/styled-components.png" /> Styled-Components
+
+<img align="left" alt="WebRTC" width="26px" src="https://i.imgur.com/9C5ScMM.png" > WebRTC
+
+<img align="left" alt="SocketIO" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/9/96/Socket-io.svg" /> SocketIO
+
+<br/>
+
+## Usage
+
+```bash
+git clone https://github.com/douglasJovenil/feracode_frontend
+cd feracode_frontend
+yarn install
+yarn start
+```
