@@ -53,8 +53,7 @@ export const LateralContent = styled.div`
   display: flex;
   flex-direction: column;
 
-  /* width: 21rem; */
-  width: 25%;
+  width: 21rem;
   height: 100%;
 
   box-shadow: 0px 0px 6px 1px rgba(42, 42, 42, 0.2);

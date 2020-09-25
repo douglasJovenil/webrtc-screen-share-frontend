@@ -14,16 +14,23 @@ trocar a var para const
 
 join_room -> solicitacao para entrar na sala
 add_new_peer -> solicita que o stremaer adicione um peer | se tiver steramer
-streamer_joined -> informa que entrou sobre quem é o streamer | se tiver streamer
+send_streamer -> informa que entrou sobre quem é o streamer | se tiver streamer
 full_room -> Informa que a sala esta cheia
-send_viewers_of_room -> Informar os integrantes da sala
-create_viewers_peers -> Informa pro streamer criar os peers
 create_answer -> Informa o viewer que deve criar uma resposta para conexão WebRTC
 accept_answer -> Envia a resposta do viewer para o streamer
 delete_peer -> Informa que o streamer delete o peer que saiu
-viewer_joined -> Informa os integrantes que alguem entrou na sala
-viewer_quit -> Informa os integrantes que alguem saiu da sala
 stop_stream -> O streamer informa que parou a transmissao
+start_stream -> O integrante informa que vai iniciar a stream
 send_offer -> O streamer envia o signal da conexão WebRTC
 send_answer -> O viewer envia o signal da conexão WebRTC
-start_stream -> O integrante informa que vai iniciar a stream
+send_who_is_in_the_room -> Informar os integrantes da sala
+create_viewers_peers -> Informa pro streamer criar os peers
+
+
+viewer_joined -> Informa os integrantes que alguem entrou na sala
+send_who_joined
+
+viewer_quit -> Informa os integrantes que alguem saiu da sala
+send_who_quit
+
+

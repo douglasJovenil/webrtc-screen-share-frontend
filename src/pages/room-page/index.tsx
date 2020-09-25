@@ -52,7 +52,7 @@ const RoomPage: React.FC = () => {
 
     // VIEWER: quando alguem entra na sala pela PRIMEIRA vez -> Quem acabou de entrar recebe todos os integrantes da sala para atualizar a UI
     socket.current.on(
-      'send_viewers_of_room',
+      'send_who_is_in_the_room',
       (receivedSocketsIDs: string[]) => {
         setViewersSocketsIDs(receivedSocketsIDs);
       }
@@ -100,7 +100,7 @@ const RoomPage: React.FC = () => {
     });
 
     // ALL: quando o streamer inicia a transmissao -> Informa os integrantes para atualizar a UI
-    socket.current.on('streamer_joined', (socketID: string) => {
+    socket.current.on('send_streamer', (socketID: string) => {
       setStreamerSocketID(socketID);
     });
 
@@ -109,18 +109,18 @@ const RoomPage: React.FC = () => {
       peers.current.set(socketID, createOfferPeer(socketID));
     });
 
-    // STREAMER: quando algum viewer sai da sala -> Deleta o peer do viewer que saiu. Esse metodo nao atualiza a UI, ela sera atualizada posteriormente pelo topico viewer_quit
+    // STREAMER: quando algum viewer sai da sala -> Deleta o peer do viewer que saiu. Esse metodo nao atualiza a UI, ela sera atualizada posteriormente pelo topico send_who_quit
     socket.current.on('delete_peer', (socketID: string) => {
       peers.current.delete(socketID);
     });
 
     // ALL: quando alguem entra na sala e a stream ja comecou -> Os integrantes da sala com excecao de quem acabou de entrar recebe o ID de quem entrou para atualizar a UI
-    socket.current.on('viewer_joined', (socketID: string) => {
+    socket.current.on('send_who_joined', (socketID: string) => {
       setViewersSocketsIDs((previousViewers) => [...previousViewers, socketID]);
     });
 
     // ALL: quando alguem sai da sala -> Os integrantes recebem o ID de quem saiu para atualizar a UI
-    socket.current.on('viewer_quit', (socketID: string) => {
+    socket.current.on('send_who_quit', (socketID: string) => {
       setViewersSocketsIDs((previousViewers) =>
         previousViewers.filter((id) => id !== socketID)
       );
