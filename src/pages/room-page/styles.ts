@@ -9,7 +9,9 @@ export const Container = styled.div`
   width: 100vw;
 
   .hide {
-    display: none;
+    visibility: hidden;
+    height: 0;
+    width: 0;
   }
 `;
 

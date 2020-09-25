@@ -41,7 +41,7 @@ const RoomPage: React.FC = () => {
         ? 'feracode-backend.herokuapp.com'
         : 'localhost:8080'
     );
-    
+
     // ALL: solicitacao para entrar na sala
     socket.current.emit('join_room');
 
@@ -223,7 +223,9 @@ const RoomPage: React.FC = () => {
 
   // ALL: verifica se existe um streamer na sala
   function roomHasStreamer(): boolean {
-    return streamerSocketID === null || streamerSocketID === '' ? false : true;
+    return streamerSocketID === undefined || streamerSocketID === ''
+      ? false
+      : true;
   }
 
   // ALL: verifica se o usuario em questao eh o streamer
@@ -254,11 +256,13 @@ const RoomPage: React.FC = () => {
   return (
     <Container>
       <MainContent>
-        <VideoContainer className={!hasStream() ? 'hide' : ''}>
+        <VideoContainer
+          className={(!roomHasStreamer() || !hasStream()) ? 'hide' : ''}
+        >
           {video}
         </VideoContainer>
 
-        {!hasStream() && (
+        {(!roomHasStreamer() || !hasStream()) && (
           <SpinnerContainer>
             <Loader type="Circles" color="#212121" />
           </SpinnerContainer>
