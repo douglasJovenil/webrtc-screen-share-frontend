@@ -69,6 +69,6 @@ yarn start
 ```
 
 ## 📔 TODO
-- Fix the bug that occurs when a user try to join the room and the streamer finish the stream
+- Fix bug that occurs when a user try to join room and the streamer finishes stream
 - Develop environment variables to use at Heroku
 - Configure CORS
