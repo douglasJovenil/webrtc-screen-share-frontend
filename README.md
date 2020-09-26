@@ -59,7 +59,7 @@ This project was developed with the following technologies:
 
 <img align="left" alt="SocketIO" width="26px" src="https://upload.wikimedia.org/wikipedia/commons/9/96/Socket-io.svg" /> SocketIO
 
-## Usage
+## 🏃 Usage
 
 ```bash
 git clone https://github.com/douglasJovenil/feracode_frontend
