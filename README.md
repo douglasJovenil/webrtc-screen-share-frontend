@@ -1,6 +1,6 @@
 # Feracode Front-end
 
-Simple application using WebRTC technology to screen share, this current version supports up to four peoples in the room, where one is the streamer and the rest are the viewers. Just one person can stream at time, if someone else want to stream they have to await the streamer end the transmission then new streams will be available.
+Simple application using WebRTC technology to screen share. This current version supports up to four people in the room, where one is the streamer and the rest are the viewers. Just one person can stream at a time and if someone else want to stream they have to await the streamer end the transmission and then it is made available again.
 
 ## ☁️ Links
 
@@ -69,6 +69,6 @@ yarn start
 ```
 
 ## 📔 TODO
-- Fix bug that occurs when a user try to join room and the streamer finishes stream
+- Fix bug that occurs when a user try to join the room and the streamer finishes the stream
 - Develop environment variables to use at Heroku
 - Configure CORS
