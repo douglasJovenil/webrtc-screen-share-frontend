@@ -38,7 +38,7 @@ const RoomPage: React.FC = () => {
   useEffect(() => {
     socket.current = io.connect(
       process.env.NODE_ENV === 'production'
-        ? 'feracode-backend.herokuapp.com'
+        ? 'webrtc-screen-share-backend.herokuapp.com'
         : 'localhost:8080'
     );
 
