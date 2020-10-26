@@ -1,11 +1,11 @@
-# Feracode Front-end
+# WebRTC Screen Share Front-End
 
 Simple screen sharing application using WebRTC technology. The current version supports up to four people in the room, one streamer and three viewers. Only one person can stream at a time (if someone else wants to stream they have to wait for the streamer to finish the transmission so it is made available again).
 
 ## ☁️ Links
 
-- [Live preview](https://feracode-frontend.herokuapp.com)
-- [Back-end code](https://github.com/douglasJovenil/feracode_backend)
+- [Live preview](https://webrtc-screen-share-frontend.herokuapp.com/)
+- [Back-end code](https://github.com/douglasJovenil/webrtc-screen-share-backend)
 
 ## 💻 Project
 
@@ -62,7 +62,7 @@ This project was developed with the following technologies:
 ## 🏃 Usage
 
 ```bash
-git clone https://github.com/douglasJovenil/feracode_frontend
+git clone https://github.com/douglasJovenil/webrtc-screen-share-frontend
 cd feracode_frontend
 yarn install
 yarn start
