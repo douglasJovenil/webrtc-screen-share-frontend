@@ -3,7 +3,7 @@
 Simple screen sharing application using WebRTC technology. The current version supports up to four people in the room, one streamer and three viewers. Only one person can stream at a time (if someone else wants to stream they have to wait for the streamer to finish the transmission so it is made available again).
 
 ## ☁️ Links
-
+- [Live Preview](https://webrtc-screen-share-frontend.herokuapp.com)
 - [Back-End code](https://github.com/douglasJovenil/webrtc-screen-share-backend)
 
 ## 💻 Project
