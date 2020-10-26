@@ -4,8 +4,7 @@ Simple screen sharing application using WebRTC technology. The current version s
 
 ## ☁️ Links
 
-- [Live preview](https://webrtc-screen-share-frontend.herokuapp.com/)
-- [Back-end code](https://github.com/douglasJovenil/webrtc-screen-share-backend)
+- [Back-End code](https://github.com/douglasJovenil/webrtc-screen-share-backend)
 
 ## 💻 Project
 
